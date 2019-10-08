@@ -1,0 +1,9 @@
+while true
+do 
+   curl 'https://vehicles.scootermap.com/api/vehicles?user_location=48.90603,2.38340&northeast_point=48.91297,2.39096&southwest_point=48.89909,2.37583&company=bird&mode=charge&randomize=false' -H 'Accept: application/json, text/plain, */*' -H 'Referer: https://scootermap.com/map' -H 'Origin: https://scootermap.com' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36' -H 'Sec-Fetch-Mode: cors' --compressed &
+   curl 'https://vehicles.scootermap.com/api/vehicles?user_location=48.90603,2.38340&northeast_point=48.91297,2.39096&southwest_point=48.89909,2.37583&company=bird&mode=charge&randomize=false' -H 'Accept: application/json, text/plain, */*' -H 'Referer: https://scootermap.com/map' -H 'Origin: https://scootermap.com' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36' -H 'Sec-Fetch-Mode: cors' --compressed &
+   curl 'https://vehicles.scootermap.com/api/vehicles?user_location=48.90603,2.38340&northeast_point=48.91297,2.39096&southwest_point=48.89909,2.37583&company=bird&mode=charge&randomize=false' -H 'Accept: application/json, text/plain, */*' -H 'Referer: https://scootermap.com/map' -H 'Origin: https://scootermap.com' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36' -H 'Sec-Fetch-Mode: cors' --compressed &
+   curl 'https://vehicles.scootermap.com/api/vehicles?user_location=48.90603,2.38340&northeast_point=48.91297,2.39096&southwest_point=48.89909,2.37583&company=bird&mode=charge&randomize=false' -H 'Accept: application/json, text/plain, */*' -H 'Referer: https://scootermap.com/map' -H 'Origin: https://scootermap.com' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36' -H 'Sec-Fetch-Mode: cors' --compressed &
+    echo "ended"
+    sleep 1
+done
