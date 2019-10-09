@@ -1,18 +1,13 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
-
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type scoot struct {
@@ -44,14 +39,19 @@ type vehicles struct {
 	Vehicles []scoot `json:"vehicles"`
 }
 
+type operator struct {
+	name               string
+	maxScootbyRequests int
+}
+
 // 48.85882,2.33068&northeast_point=48.91435,2.41599&southwest_point=48.80322,2.2453
 // 48.85945,2.29862&northeast_point=48.91498,2.38389&southwest_point=48.80385,2.21335
-func createURL(operator string) *url.URL {
+func createURL(actualOperator operator, position coordonate) *url.URL {
 	q := url.Values{}
-	q.Add("user_location", "48.85882,2.33068")
-	q.Add("northeast_point", "48.91435,2.41599")
-	q.Add("southwest_point", "48.80322,2.2453")
-	q.Add("company", operator)
+	q.Add("user_location", position.userLocation)
+	q.Add("northeast_point", position.northeastPoint)
+	q.Add("southwest_point", position.southwestPoint)
+	q.Add("company", actualOperator.name)
 	q.Add("mode", "ride")
 	q.Add("randomize", "false")
 
@@ -65,8 +65,8 @@ func createURL(operator string) *url.URL {
 	return u
 }
 
-func createRequest(operator string) *http.Request {
-	u := createURL(operator)
+func createRequest(actualOperator operator, position coordonate) *http.Request {
+	u := createURL(actualOperator, position)
 	fmt.Println(u.String())
 	req, _ := http.NewRequest("GET", u.String(), nil)
 	req.Header.Add("Accept", `application/json, text/plain, */*`)
@@ -78,10 +78,11 @@ func createRequest(operator string) *http.Request {
 	return req
 }
 
-func getScootInCoordonates(operator string) []byte {
+func getScootInCoordonates(actualOperator operator, position coordonate, ch chan []scoot, channelCountIncrement chan int) {
+	var dat vehicles
 	client := &http.Client{}
 	var req *http.Request
-	req = createRequest(operator)
+	req = createRequest(actualOperator, position)
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -91,54 +92,43 @@ func getScootInCoordonates(operator string) []byte {
 	if err != nil {
 		panic(err)
 	}
-	return body
-}
-
-func insertData(old_list_scoot []scoot, list_scoot []scoot, operator string, counter int) bool {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	err = json.Unmarshal(body, &dat)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
-	err = client.Ping(ctx, readpref.Primary())
-	collection := client.Database("testing").Collection("ride")
-	res, err := collection.InsertOne(ctx, bson.M{"date": bson.Now(), "operator": operator, "scooter_list": list_scoot, "counter": counter})
-	id := res.InsertedID
-	fmt.Println(bson.M{"name": "pi", "value": 3.14159}, id)
-	return true
+	fmt.Println(len(dat.Vehicles))
+	ch <- dat.Vehicles
+	return
 }
 
-func getTrott(operator string, coordonateList []coordonate) {
-	var scoots []scoot = nil
+func getTrott(actualOperator operator, coordonateList []coordonate, wg sync.WaitGroup) {
+	defer wg.Done()
 	var counter int
 	for true {
 		counter++
 		if counter == 10 {
 			counter = 0
 		}
-		ch := make(chan int)
+		fmt.Println("test", coordonateList)
+		ch := make(chan []scoot)
+		channelCountIncrement := make(chan int)
 		for _, position := range coordonateList {
-			var dat vehicles
-			body := getScootInCoordonates(operator, position)
-			err := json.Unmarshal(body, &dat)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			fmt.Println(len(dat.Vehicles))
-			scoots = dat.Vehicles
-			time.Sleep(60 * time.Second)
+			fmt.Println("in")
+			go getScootInCoordonates(actualOperator, position, ch, channelCountIncrement)
 		}
-
-		insertData(scoots, dat.Vehicles, operator, counter)
+		go insertData(ch, actualOperator, len(coordonateList), channelCountIncrement, counter)
+		time.Sleep(60 * time.Second)
 	}
 }
 
 func main() {
-	trottList := []string{"bird"}
+	trottList := []operator{operator{"lime", 50}}
 	coordonateList := []coordonate{coordonate{"48.85882,2.33068", "48.91435,2.41599", "48.80322,2.2453"}}
+	var wg sync.WaitGroup
+	wg.Add(len(trottList))
 	for _, operator := range trottList {
-		go getTrott(operator, coordonateList)
+		go getTrott(operator, coordonateList, wg)
 	}
+	wg.Wait()
 }
