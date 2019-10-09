@@ -91,7 +91,7 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 	req = createRequest(actualOperator, position)
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 		ch <- []scoot{}
 		return
 	}
@@ -102,7 +102,7 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 	}
 	err = json.Unmarshal(body, &dat)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 		return
 	}
 	fmt.Println(len(dat.Vehicles))
@@ -133,6 +133,7 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 				}
 				go getScootInCoordonates(actualOperator, newPos, ch)
 			}
+			time.Sleep(1 * time.Second)
 		}
 		channelCount := int(actualOperator.maxDivision * actualOperator.maxDivision)
 		fmt.Println("channelcoutn", channelCount)
@@ -142,7 +143,7 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 }
 
 func main() {
-	trottList := []operator{operator{"lime", 50, 40}}
+	trottList := []operator{operator{"lime", 50, 10}}
 	coordonateList := coordonate{48.9, 48.8, 2.20, 2.44}
 	var wg sync.WaitGroup
 	wg.Add(len(trottList))
