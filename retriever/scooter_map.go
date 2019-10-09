@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -30,9 +31,10 @@ type scoot struct {
 }
 
 type coordonate struct {
-	userLocation   string
-	northeastPoint string
-	southwestPoint string
+	top   float64
+	bot   float64
+	left  float64
+	right float64
 }
 
 type vehicles struct {
@@ -42,15 +44,19 @@ type vehicles struct {
 type operator struct {
 	name               string
 	maxScootbyRequests int
+	maxDivision        float64
 }
 
 // 48.85882,2.33068&northeast_point=48.91435,2.41599&southwest_point=48.80322,2.2453
 // 48.85945,2.29862&northeast_point=48.91498,2.38389&southwest_point=48.80385,2.21335
 func createURL(actualOperator operator, position coordonate) *url.URL {
 	q := url.Values{}
-	q.Add("user_location", position.userLocation)
-	q.Add("northeast_point", position.northeastPoint)
-	q.Add("southwest_point", position.southwestPoint)
+	southwestPoint := strconv.FormatFloat(position.bot, 'f', -1, 32) + "," + strconv.FormatFloat(position.left, 'f', -1, 32)
+	northeastPoint := strconv.FormatFloat(position.top, 'f', -1, 32) + "," + strconv.FormatFloat(position.right, 'f', -1, 32)
+	userLocation := strconv.FormatFloat((position.top+position.bot)/2, 'f', -1, 32) + "," + strconv.FormatFloat((position.left+position.right)/2, 'f', -1, 32)
+	q.Add("user_location", userLocation)
+	q.Add("northeast_point", northeastPoint)
+	q.Add("southwest_point", southwestPoint)
 	q.Add("company", actualOperator.name)
 	q.Add("mode", "ride")
 	q.Add("randomize", "false")
@@ -78,7 +84,7 @@ func createRequest(actualOperator operator, position coordonate) *http.Request {
 	return req
 }
 
-func getScootInCoordonates(actualOperator operator, position coordonate, ch chan []scoot, channelCountIncrement chan int) {
+func getScootInCoordonates(actualOperator operator, position coordonate, ch chan []scoot) {
 	var dat vehicles
 	client := &http.Client{}
 	var req *http.Request
@@ -86,9 +92,11 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
+		ch <- []scoot{}
+		return
 	}
-	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
 	if err != nil {
 		panic(err)
 	}
@@ -102,7 +110,7 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 	return
 }
 
-func getTrott(actualOperator operator, coordonateList []coordonate, wg sync.WaitGroup) {
+func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var counter int
 	for true {
@@ -110,25 +118,36 @@ func getTrott(actualOperator operator, coordonateList []coordonate, wg sync.Wait
 		if counter == 10 {
 			counter = 0
 		}
-		fmt.Println("test", coordonateList)
 		ch := make(chan []scoot)
-		channelCountIncrement := make(chan int)
-		for _, position := range coordonateList {
-			fmt.Println("in")
-			go getScootInCoordonates(actualOperator, position, ch, channelCountIncrement)
+		incrementY := (position.top - position.bot) / actualOperator.maxDivision
+		incrementX := (position.right - position.left) / actualOperator.maxDivision
+		var i float64
+		for i = 0; i < actualOperator.maxDivision; i++ {
+			var j float64
+			for j = 0; j < actualOperator.maxDivision; j++ {
+				newPos := coordonate{
+					position.bot + i*incrementY,
+					position.bot + (i+1)*incrementY,
+					position.left + j*incrementX,
+					position.left + (j+1)*incrementX,
+				}
+				go getScootInCoordonates(actualOperator, newPos, ch)
+			}
 		}
-		go insertData(ch, actualOperator, len(coordonateList), channelCountIncrement, counter)
-		time.Sleep(60 * time.Second)
+		channelCount := int(actualOperator.maxDivision * actualOperator.maxDivision)
+		fmt.Println("channelcoutn", channelCount)
+		go insertData(ch, actualOperator, channelCount, counter)
+		time.Sleep(300 * time.Second)
 	}
 }
 
 func main() {
-	trottList := []operator{operator{"lime", 50}}
-	coordonateList := []coordonate{coordonate{"48.85882,2.33068", "48.91435,2.41599", "48.80322,2.2453"}}
+	trottList := []operator{operator{"lime", 50, 40}}
+	coordonateList := coordonate{48.9, 48.8, 2.20, 2.44}
 	var wg sync.WaitGroup
 	wg.Add(len(trottList))
 	for _, operator := range trottList {
-		go getTrott(operator, coordonateList, wg)
+		go getTrott(operator, coordonateList, &wg)
 	}
 	wg.Wait()
 }
