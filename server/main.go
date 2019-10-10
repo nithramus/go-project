@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -27,26 +28,30 @@ func getMongoConnection() mongoConnection {
 	ctx, _ := context.WithCancel(context.Background())
 	err = client.Connect(ctx)
 	err = client.Ping(ctx, readpref.Primary())
-	collection := client.Database("testing").Collection("ride")
+	collection := client.Database("testing").Collection("lime")
 	return mongoConnection{ctx: ctx, collection: collection, test: "yolo"}
 }
 
 func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ctx := dbConnection.ctx
-	// fmt.Println(bson.D{{}, {"latitude", 1}})
-	// var result []bson.M
 	projection := bson.M{
 		"scooter_list.latitude":  1,
 		"scooter_list.longitude": 1,
 	}
-	// var yolo int64 = 10
-	resp, err := dbConnection.collection.Find(ctx, bson.M{}, options.Find().SetProjection(projection))
+	keys := r.URL.Query()
+	from := keys.Get("from")
+	now := time.Now()
+	new := now.Add(+24 * time.Hour)
+	fmt.Println(from, new)
+
+	resp, err := dbConnection.collection.Find(ctx, bson.M{
+		"date": bson.M{"$gte": bson.Now().Add(-24 * time.Hour)},
+	}, options.Find().SetProjection(projection))
 	if err != nil {
 		panic(err)
 	}
 	var counter int
 	var test []bson.M
-	// w.Write([]byte("["))
 	for resp.Next(ctx) {
 		counter++
 		var result bson.M
@@ -55,11 +60,7 @@ func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Re
 			log.Fatal(err)
 		}
 		test = append(test, result)
-		// w.Write(",")
-		// w.Write([]byte(","))
-		// do something with result....
 	}
-	// w.Write([]byte("]"))
 	json.NewEncoder(w).Encode(test)
 	fmt.Println(counter)
 	defer resp.Close(ctx)
