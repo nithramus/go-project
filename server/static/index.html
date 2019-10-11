@@ -24,10 +24,38 @@
     <div id="map"></div>
 
     <div id="sidebar">
-        <input type="range" name="points" min="0" max="10">
-        <input type="radio" name="gender" value="male"> lime<br>
-        <input type="radio" name="gender" value="female"> bird<br>
-        <button>refresh</button>
+      <input type="range" name="points" min="0" max="10" /><br />
+      <div>
+        <input type="checkbox" id="bird" name="bird" />
+        <label for="bird">Bird</label>
+      </div>
+
+      <div>
+        <input type="checkbox" id="lime" name="lime" />
+        <label for="lime">Lime</label>
+      </div>
+      <div>
+        <input type="checkbox" id="void" name="void" checked />
+        <label for="void">void</label>
+      </div>
+      <div>
+        <input type="checkbox" id="hive" name="hive" />
+        <label for="hive">Hive</label>
+      </div>
+      <div>
+        <input type="checkbox" id="circ" name="circ" />
+        <label for="circ">Circ</label>
+      </div>
+      <div>
+        <input type="checkbox" id="tier" name="tier" />
+        <label for="tier">Tier</label>
+      </div>
+      <div>
+        <input type="checkbox" id="wind" name="wind" />
+        <label for="wind">Wind</label>
+      </div>
+    
+      <button onclick="refresh()">refresh</button>
     </div>
     <!-- Fichiers Javascript -->
     <script
@@ -38,6 +66,7 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="leaflet-heat.js"></script>
     <script src="leaflet-sidebard.js"></script>
+    <script src="actions.js"></script>
     <script src="base.js"></script>
   </body>
 </html>

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,9 +14,9 @@ import (
 )
 
 type mongoConnection struct {
-	ctx        context.Context
-	collection *mongo.Collection
-	test       string
+	ctx      context.Context
+	database *mongo.Database
+	test     string
 }
 
 func getMongoConnection() mongoConnection {
@@ -28,8 +27,8 @@ func getMongoConnection() mongoConnection {
 	ctx, _ := context.WithCancel(context.Background())
 	err = client.Connect(ctx)
 	err = client.Ping(ctx, readpref.Primary())
-	collection := client.Database("testing").Collection("lime")
-	return mongoConnection{ctx: ctx, collection: collection, test: "yolo"}
+	database := client.Database("testing")
+	return mongoConnection{ctx: ctx, database: database, test: "yolo"}
 }
 
 func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -39,13 +38,16 @@ func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Re
 		"scooter_list.longitude": 1,
 	}
 	keys := r.URL.Query()
-	from := keys.Get("from")
-	now := time.Now()
-	new := now.Add(+24 * time.Hour)
-	fmt.Println(from, new)
+	// fromDate := keys.Get("fromDate")
+	// toDate := keys.Get("toDate")
+	operator := keys.Get("operator")
 
-	resp, err := dbConnection.collection.Find(ctx, bson.M{
-		"date": bson.M{"$gte": bson.Now().Add(-24 * time.Hour)},
+	// now := time.Now()
+	// new := now.Add(+24 * time.Hour)
+	fmt.Println(operator)
+
+	resp, err := dbConnection.database.Collection(operator).Find(ctx, bson.M{
+		// "date": bson.M{"$g	te": bson.Now().Add(-24 * time.Hour)},
 	}, options.Find().SetProjection(projection))
 	if err != nil {
 		panic(err)

@@ -12,22 +12,29 @@ import (
 )
 
 type scoot struct {
-	BatteryLevel       string  `json:"battery_level"`
-	BatteryPercent     int     `json:"battery_percent"`
-	ChargeBountyPrice  float64 `json:"charge_bounty_price"`
-	Company            string  `json:"company"`
-	FetchedAt          string  `json:"fetched_at"`
-	LastGpsAt          string  `json:"last_gps_at"`
-	LastTripAt         string  `json:"last_trip_at"`
-	Latitude           float64 `json:"latitude"`
-	LikelihoodScore    float64 `json:"likelihood_score"`
-	Longitude          float64 `json:"longitude"`
-	Mode               string  `json:"mode"`
-	TaskType           string  `json:"task_type"`
-	VehicleID          string  `json:"vehicle_id"`
-	VehicleIDToDisplay string  `json:"vehicle_id_to_display"`
-	VehicleLocationID  string  `json:"vehicle_location_id"`
-	VehicleType        string  `json:"vehicle_type"`
+	BatteryLevel       string      `json:"battery_level"`
+	BatteryPercent     float64     `json:"battery_percent"`
+	ChargeBountyPrice  float64     `json:"charge_bounty_price"`
+	Company            string      `json:"company"`
+	FetchedAt          string      `json:"fetched_at"`
+	LastGpsAt          string      `json:"last_gps_at"`
+	LastTripAt         string      `json:"last_trip_at"`
+	Latitude           float64     `json:"latitude"`
+	LikelihoodScore    float64     `json:"likelihood_score"`
+	Longitude          float64     `json:"longitude"`
+	Mode               string      `json:"mode"`
+	TaskType           string      `json:"task_type"`
+	VehicleID          intOrString `json:"vehicle_id"`
+	VehicleIDToDisplay intOrString `json:"vehicle_id_to_display"`
+	VehicleLocationID  string      `json:"vehicle_location_id"`
+	VehicleType        string      `json:"vehicle_type"`
+}
+
+type intOrString string
+
+func (w *intOrString) UnmarshalJSON(data []byte) error {
+	*w = intOrString(string(data))
+	return nil
 }
 
 type coordonate struct {
@@ -73,7 +80,6 @@ func createURL(actualOperator operator, position coordonate) *url.URL {
 
 func createRequest(actualOperator operator, position coordonate) *http.Request {
 	u := createURL(actualOperator, position)
-	fmt.Println(u.String())
 	req, _ := http.NewRequest("GET", u.String(), nil)
 	req.Header.Add("Accept", `application/json, text/plain, */*`)
 	req.Header.Add("Referer", `https://scootermap.com/map`)
@@ -102,10 +108,10 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 	}
 	err = json.Unmarshal(body, &dat)
 	if err != nil {
+		fmt.Println(string(body))
 		panic(err)
 		return
 	}
-	fmt.Println(len(dat.Vehicles))
 	ch <- dat.Vehicles
 	return
 }
@@ -122,6 +128,9 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 		incrementY := (position.top - position.bot) / actualOperator.maxDivision
 		incrementX := (position.right - position.left) / actualOperator.maxDivision
 		var i float64
+		channelCount := int(actualOperator.maxDivision * actualOperator.maxDivision)
+		// we launch the process that will handle all the datas
+		go insertData(ch, actualOperator, channelCount, counter)
 		for i = 0; i < actualOperator.maxDivision; i++ {
 			var j float64
 			for j = 0; j < actualOperator.maxDivision; j++ {
@@ -133,17 +142,23 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 				}
 				go getScootInCoordonates(actualOperator, newPos, ch)
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(2 * time.Second)
 		}
-		channelCount := int(actualOperator.maxDivision * actualOperator.maxDivision)
-		fmt.Println("channelcoutn", channelCount)
-		go insertData(ch, actualOperator, channelCount, counter)
 		time.Sleep(300 * time.Second)
 	}
 }
 
 func main() {
-	trottList := []operator{operator{"lime", 50, 10}}
+	trottList := []operator{
+		operator{"lime", 50, 30},
+		operator{"bird", 50, 20},
+		operator{"hive", 50, 10},
+		operator{"circ", 50, 10},
+		operator{"tier", 50, 10},
+		operator{"voi", 50, 10},
+		operator{"wind", 50, 10},
+	}
+
 	coordonateList := coordonate{48.9, 48.8, 2.20, 2.44}
 	var wg sync.WaitGroup
 	wg.Add(len(trottList))

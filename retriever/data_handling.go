@@ -17,7 +17,7 @@ func insertData(ch chan []scoot, actualOperator operator, channelCount int, coun
 	for i := 0; i < channelCount; i++ {
 		newScootList := <-ch
 		for _, scoot := range newScootList {
-			scootMap[scoot.VehicleID] = scoot
+			scootMap[string(scoot.VehicleID)] = scoot
 		}
 		fmt.Println("numberofrequest", i)
 		// scootList = qappend(scootList, newScootList...)
