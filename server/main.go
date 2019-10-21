@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -16,19 +18,22 @@ import (
 type mongoConnection struct {
 	ctx      context.Context
 	database *mongo.Database
-	test     string
 }
 
 func getMongoConnection() mongoConnection {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	host := os.Getenv("MONGO_HOST")
+	login := os.Getenv("MONGO_LOGIN")
+	password := os.Getenv("MONGO_PASSWORD")
+	bdd := os.Getenv("MONGO_BDD_NAME")
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + login + ":" + password + "@" + host + ":27017?authSource=admin"))
 	if err != nil {
 		panic(err)
 	}
 	ctx, _ := context.WithCancel(context.Background())
 	err = client.Connect(ctx)
 	err = client.Ping(ctx, readpref.Primary())
-	database := client.Database("testing")
-	return mongoConnection{ctx: ctx, database: database, test: "yolo"}
+	database := client.Database(bdd)
+	return mongoConnection{ctx: ctx, database: database}
 }
 
 func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -36,18 +41,26 @@ func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Re
 	projection := bson.M{
 		"scooter_list.latitude":  1,
 		"scooter_list.longitude": 1,
+		"date":                   1,
 	}
 	keys := r.URL.Query()
 	// fromDate := keys.Get("fromDate")
-	// toDate := keys.Get("toDate")
+	toDate := keys.Get("date")
 	operator := keys.Get("operator")
 
 	// now := time.Now()
 	// new := now.Add(+24 * time.Hour)
+	startDay, err := time.Parse(time.RFC1123, toDate)
+	endDay := startDay.Add(24 * time.Hour)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("date:", startDay)
+	fmt.Println("yolo:", endDay)
 	fmt.Println(operator)
 
 	resp, err := dbConnection.database.Collection(operator).Find(ctx, bson.M{
-		// "date": bson.M{"$g	te": bson.Now().Add(-24 * time.Hour)},
+		"date": bson.M{"$gte": startDay, "$lte": endDay},
 	}, options.Find().SetProjection(projection))
 	if err != nil {
 		panic(err)
@@ -74,5 +87,11 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.HandleFunc("/data", dbConnection.ServeHTTP)
 	log.Println("Listening...")
-	http.ListenAndServe(":3000", nil)
+	port := os.Getenv("HTTP_PORT")
+	if len(port) == 0 {
+		port = ":3000"
+	}
+	fmt.Println(port)
+	err := http.ListenAndServe(port, nil)
+	fmt.Println(err)
 }

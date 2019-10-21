@@ -90,26 +90,28 @@ func createRequest(actualOperator operator, position coordonate) *http.Request {
 	return req
 }
 
-func getScootInCoordonates(actualOperator operator, position coordonate, ch chan []scoot) {
+func getScootInCoordonates(actualOperator operator, position coordonate, ch chan []scoot, client *http.Client) {
 	var dat vehicles
-	client := &http.Client{}
 	var req *http.Request
 	req = createRequest(actualOperator, position)
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 		ch <- []scoot{}
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		ch <- []scoot{}
+		return
 	}
 	err = json.Unmarshal(body, &dat)
 	if err != nil {
 		fmt.Println(string(body))
-		panic(err)
+		fmt.Println(err)
+		ch <- []scoot{}
 		return
 	}
 	ch <- dat.Vehicles
@@ -118,6 +120,11 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 
 func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) {
 	defer wg.Done()
+	tr := &http.Transport{
+		IdleConnTimeout: 60 * time.Second,
+	}
+	client := &http.Client{Transport: tr}
+
 	var counter int
 	for true {
 		counter++
@@ -140,7 +147,7 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 					position.left + j*incrementX,
 					position.left + (j+1)*incrementX,
 				}
-				go getScootInCoordonates(actualOperator, newPos, ch)
+				go getScootInCoordonates(actualOperator, newPos, ch, client)
 			}
 			time.Sleep(2 * time.Second)
 		}
@@ -150,7 +157,7 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 
 func main() {
 	trottList := []operator{
-		operator{"lime", 50, 30},
+		operator{"lime", 50, 60},
 		operator{"bird", 50, 20},
 		operator{"hive", 50, 10},
 		operator{"circ", 50, 10},

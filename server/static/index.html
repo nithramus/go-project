@@ -23,8 +23,14 @@
   <body>
     <div id="map"></div>
 
+    
     <div id="sidebar">
-      <input type="range" name="points" min="0" max="10" /><br />
+      <p id="infos"></p>
+      <input id="date" type="date" required>
+      <input id="timelapse" onclick="pause()" type="range" name="points" min="0" max="10" /><br />
+      <button onclick="refresh()">Recharger les données</button>
+      <button onclick="pause()">Pause</button>
+      <button onclick="resume()">Reprendre</button>
       <div>
         <input type="checkbox" id="bird" name="bird" />
         <label for="bird">Bird</label>
@@ -55,7 +61,6 @@
         <label for="wind">Wind</label>
       </div>
     
-      <button onclick="refresh()">refresh</button>
     </div>
     <!-- Fichiers Javascript -->
     <script

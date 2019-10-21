@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,7 +20,7 @@ func insertData(ch chan []scoot, actualOperator operator, channelCount int, coun
 		for _, scoot := range newScootList {
 			scootMap[string(scoot.VehicleID)] = scoot
 		}
-		fmt.Println("numberofrequest", i)
+		fmt.Println("numberofrequest", i, actualOperator)
 		// scootList = qappend(scootList, newScootList...)
 	}
 	fmt.Println(len(scootMap))
@@ -28,14 +29,18 @@ func insertData(ch chan []scoot, actualOperator operator, channelCount int, coun
 		// fmt.Println(scoot)
 		scootList = append(scootList, scoot)
 	}
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	host := os.Getenv("MONGO_HOST")
+	login := os.Getenv("MONGO_LOGIN")
+	password := os.Getenv("MONGO_PASSWORD")
+	bdd := os.Getenv("MONGO_BDD_NAME")
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + login + ":" + password + "@" + host + ":27017?authSource=admin"))
 	if err != nil {
 		panic(err)
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	err = client.Connect(ctx)
 	err = client.Ping(ctx, readpref.Primary())
-	collection := client.Database("testing").Collection(actualOperator.name)
+	collection := client.Database(bdd).Collection(actualOperator.name)
 	res, err := collection.InsertOne(ctx, bson.M{"date": bson.Now(), "operator": actualOperator.name, "scooter_list": scootList, "counter": counter})
 	if err != nil {
 		panic(err)

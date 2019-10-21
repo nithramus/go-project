@@ -20,6 +20,9 @@ function initMap() {
   });
 
   map.addControl(sidebar);
+  document.getElementById('date').valueAsDate = new Date();
+  
+  
     setTimeout(function() {
         sidebar.show();
     }, 500);
@@ -40,6 +43,7 @@ var globalMap
 window.onload = async function() {
   // Fonction d'initialisation qui s'exécute lorsque le DOM est chargé
   globalMap = initMap();
+  await sleep(2000)
   refresh()
 
 };
