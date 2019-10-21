@@ -33,7 +33,7 @@ func insertData(ch chan []scoot, actualOperator operator, channelCount int, coun
 	login := os.Getenv("MONGO_LOGIN")
 	password := os.Getenv("MONGO_PASSWORD")
 	bdd := os.Getenv("MONGO_BDD_NAME")
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + login + ":" + password + "@" + host + ":27017?authSource=admin"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + login + ":" + password + "@" + host + ":27017"))
 	if err != nil {
 		panic(err)
 	}
