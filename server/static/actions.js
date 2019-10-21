@@ -61,7 +61,7 @@ async function drawLayer(actuFuncID) {
 
 async function loadData(operator, date) {
   const response = await fetch(
-    "http://localhost:3000/data?" + "operator=" + operator + "&date=" + date.toUTCString()
+    "/data?" + "operator=" + operator + "&date=" + date.toUTCString()
   );
   const dataJson = await response.json();
   if (!dataJson) return [];
