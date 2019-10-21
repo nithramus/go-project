@@ -25,7 +25,8 @@ func getMongoConnection() mongoConnection {
 	login := os.Getenv("MONGO_LOGIN")
 	password := os.Getenv("MONGO_PASSWORD")
 	bdd := os.Getenv("MONGO_BDD_NAME")
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + login + ":" + password + "@" + host + ":27017?authSource=admin"))
+	fmt.Println(host, login, password, bdd)
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + login + ":" + password + "@" + host + ":27017"))
 	if err != nil {
 		panic(err)
 	}
@@ -84,8 +85,8 @@ func (dbConnection *mongoConnection) ServeHTTP(w http.ResponseWriter, r *http.Re
 func main() {
 	dbConnection := getMongoConnection()
 	fs := http.FileServer(http.Dir("static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
 	http.HandleFunc("/data", dbConnection.ServeHTTP)
+	http.Handle("/", fs)
 	log.Println("Listening...")
 	port := os.Getenv("HTTP_PORT")
 	if len(port) == 0 {
