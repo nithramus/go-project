@@ -145,7 +145,7 @@ async function refresh() {
   const date = new Date(document.getElementById("date").value)
   data = await Promise.all(operatorList.map(operator => loadData(operator, date)));
   // document.getElementById("infos").innerHTML = ""
-  if (data[0].listDiffs) {
+  if (!data[0].listDiffs) {
     document.getElementById("infos").innerHTML = "Aucune donnée disponible, essayez de changer la date"
     return
   }
