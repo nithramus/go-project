@@ -145,8 +145,8 @@ async function refresh() {
   const date = new Date(document.getElementById("date").value)
   data = await Promise.all(operatorList.map(operator => loadData(operator, date)));
   // document.getElementById("infos").innerHTML = ""
-  if (data[0].length < 1) {
-    document.getElementById("infos").innerHTML = "Aucune donnée disponible, essayez de change la date"
+  if (data[0].listDiffs) {
+    document.getElementById("infos").innerHTML = "Aucune donnée disponible, essayez de changer la date"
     return
   }
   // updating the timelapse

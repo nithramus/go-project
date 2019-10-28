@@ -109,7 +109,9 @@ func getScootInCoordonates(actualOperator operator, position coordonate, ch chan
 	if err != nil {
 		fmt.Println(string(body))
 		fmt.Println(err)
-		ch <- []scoot{}
+		fmt.Println("retrying")
+		getScootInCoordonates(actualOperator, position, ch, client)
+		// ch <- []scoot{}
 		return
 	}
 	ch <- dat.Vehicles
@@ -156,12 +158,12 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 func main() {
 	trottList := []operator{
 		operator{"lime", 50, 30},
-		// operator{"bird", 50, 10},
-		// operator{"hive", 50, 10},
-		// operator{"circ", 50, 10},
-		// operator{"tier", 50, 10},
-		// operator{"voi", 50, 10},
-		// operator{"wind", 50, 10},
+		operator{"bird", 50, 10},
+		operator{"hive", 50, 10},
+		operator{"circ", 50, 10},
+		operator{"tier", 50, 10},
+		operator{"voi", 50, 10},
+		operator{"wind", 50, 10},
 	}
 	coordonateList := coordonate{48.9, 48.8, 2.20, 2.44}
 	var wg sync.WaitGroup
