@@ -1,2 +1,0 @@
-# go-project
-test-api-key: eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX3Rva2VuIjoiRlEyUlJXT1A2VjJWNiIsImxvZ2luX2NvdW50IjozfQ.fLl_M8m10xIODxepiUYNnS7hrmmdhp9ibDdEoBAXUlM

@@ -12,22 +12,22 @@ import (
 )
 
 type scoot struct {
-	BatteryLevel       string      `json:"battery_level"`
-	BatteryPercent     float64     `json:"battery_percent"`
-	ChargeBountyPrice  float64     `json:"charge_bounty_price"`
-	Company            string      `json:"company"`
-	FetchedAt          string      `json:"fetched_at"`
-	LastGpsAt          string      `json:"last_gps_at"`
-	LastTripAt         string      `json:"last_trip_at"`
-	Latitude           float64     `json:"latitude"`
-	LikelihoodScore    float64     `json:"likelihood_score"`
-	Longitude          float64     `json:"longitude"`
-	Mode               string      `json:"mode"`
-	TaskType           string      `json:"task_type"`
-	VehicleID          intOrString `json:"vehicle_id"`
-	VehicleIDToDisplay intOrString `json:"vehicle_id_to_display"`
-	VehicleLocationID  string      `json:"vehicle_location_id"`
-	VehicleType        string      `json:"vehicle_type"`
+	BatLeval          string      `json:"battery_level"`
+	BatPourcent       float64     `json:"battery_percent"`
+	ChargeBountyPrice float64     `json:"charge_bounty_price"`
+	Company           string      `json:"company"`
+	FetchedAt         string      `json:"fetched_at"`
+	LastGpsAt         string      `json:"last_gps_at"`
+	LastTripAt        string      `json:"last_trip_at"`
+	Lt                float64     `json:"latitude"`
+	LikelihoodScore   float64     `json:"likelihood_score"`
+	Lg                float64     `json:"longitude"`
+	Mode              string      `json:"mode"`
+	TaskType          string      `json:"task_type"`
+	Id                intOrString `json:"vehicle_id"`
+	IdToDisplay       intOrString `json:"vehicle_id_to_display"`
+	VehicleLocationID string      `json:"vehicle_location_id"`
+	VehicleType       string      `json:"vehicle_type"`
 }
 
 type intOrString string
@@ -54,8 +54,6 @@ type operator struct {
 	maxDivision        float64
 }
 
-// 48.85882,2.33068&northeast_point=48.91435,2.41599&southwest_point=48.80322,2.2453
-// 48.85945,2.29862&northeast_point=48.91498,2.38389&southwest_point=48.80385,2.21335
 func createURL(actualOperator operator, position coordonate) *url.URL {
 	q := url.Values{}
 	southwestPoint := strconv.FormatFloat(position.bot, 'f', -1, 32) + "," + strconv.FormatFloat(position.left, 'f', -1, 32)
@@ -149,7 +147,7 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 				}
 				go getScootInCoordonates(actualOperator, newPos, ch, client)
 			}
-			time.Sleep(2 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 		time.Sleep(300 * time.Second)
 	}
@@ -157,15 +155,14 @@ func getTrott(actualOperator operator, position coordonate, wg *sync.WaitGroup) 
 
 func main() {
 	trottList := []operator{
-		operator{"lime", 50, 60},
-		operator{"bird", 50, 20},
-		operator{"hive", 50, 10},
-		operator{"circ", 50, 10},
-		operator{"tier", 50, 10},
-		operator{"voi", 50, 10},
-		operator{"wind", 50, 10},
+		operator{"lime", 50, 30},
+		// operator{"bird", 50, 10},
+		// operator{"hive", 50, 10},
+		// operator{"circ", 50, 10},
+		// operator{"tier", 50, 10},
+		// operator{"voi", 50, 10},
+		// operator{"wind", 50, 10},
 	}
-
 	coordonateList := coordonate{48.9, 48.8, 2.20, 2.44}
 	var wg sync.WaitGroup
 	wg.Add(len(trottList))

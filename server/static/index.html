@@ -23,44 +23,65 @@
   <body>
     <div id="map"></div>
 
-    
     <div id="sidebar">
-      <p id="infos"></p>
-      <input id="date" type="date" required>
-      <input id="timelapse" onclick="pause()" type="range" name="points" min="0" max="10" /><br />
-      <button onclick="refresh()">Recharger les données</button>
-      <button onclick="pause()">Pause</button>
-      <button onclick="resume()">Reprendre</button>
-      <div>
-        <input type="checkbox" id="bird" name="bird" />
-        <label for="bird">Bird</label>
+      <h1>Carte des trottinettes à Paris: </h1>
+      <div style="text-align: center">
+        <h2 id="infos"></h2>
+        <input
+          id="timelapse"
+          onclick="pause()"
+          type="range"
+          name="points"
+          min="0"
+          max="10"
+        /><br />
+        <button onclick="pause()">&#9724;</button>
+        <button onclick="resume()">&#9654;</button> <br /><br /><br /><br />
       </div>
+      <h3>Paramètres de recherche:</h3>
+      <div style="text-align: left">
+        <input id="date" type="date" required />
+        <div>
+          <div>
+            <input type="checkbox" id="bird" name="bird" />
+            <label for="bird">Bird</label>
+          </div>
 
-      <div>
-        <input type="checkbox" id="lime" name="lime" />
-        <label for="lime">Lime</label>
+          <div>
+            <input type="checkbox" id="lime" name="lime" checked />
+            <label for="lime">Lime</label>
+          </div>
+          <div>
+            <input type="checkbox" id="void" name="void" />
+            <label for="void">void</label>
+          </div>
+          <div>
+            <input type="checkbox" id="hive" name="hive" />
+            <label for="hive">Hive</label>
+          </div>
+          <div>
+            <input type="checkbox" id="circ" name="circ" />
+            <label for="circ">Circ</label>
+          </div>
+          <div>
+            <input type="checkbox" id="tier" name="tier" />
+            <label for="tier">Tier</label>
+          </div>
+          <div>
+            <input type="checkbox" id="wind" name="wind" />
+            <label for="wind">Wind</label>
+          </div>
+          <button onclick="refresh()">Relancer une recherche</button>
+        </div>
       </div>
-      <div>
-        <input type="checkbox" id="void" name="void" checked />
-        <label for="void">void</label>
-      </div>
-      <div>
-        <input type="checkbox" id="hive" name="hive" />
-        <label for="hive">Hive</label>
-      </div>
-      <div>
-        <input type="checkbox" id="circ" name="circ" />
-        <label for="circ">Circ</label>
-      </div>
-      <div>
-        <input type="checkbox" id="tier" name="tier" />
-        <label for="tier">Tier</label>
-      </div>
-      <div>
-        <input type="checkbox" id="wind" name="wind" />
-        <label for="wind">Wind</label>
-      </div>
-    
+      <br><br><br><br>
+      <p>
+        Description: Ce projet a pour ambition de donner un aperçu des zones de Paris ayant les plus fortes 
+        concentration en trottinettes electriques.
+        Les données sont récupérées toutes les 5 minutes chez les différentes opérateurs.
+        Le projet est open source, écris en Golang. Utilisation de leaflet et openstreetmap pour la visualisation
+        <a href="https://github.com/nithramus/scooter-heatmap">Le github du projet</a>
+      </p>
     </div>
     <!-- Fichiers Javascript -->
     <script

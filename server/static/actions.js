@@ -5,12 +5,19 @@ let globalHeatLayer;
 let operatorList = [];
 let map
 let isInPause = false
-
+let coordinateMap = []
+let operatorMap = {}
 function resume() {
+  console.log(counter, data[0].listDiffs.length)
+  if (counter + 1 >= data[0].listDiffs.length) {
+    counter = 0
+  }
+  else {
+    counter = parseInt(timelapse.value);
+  }
    map.removeLayer(globalHeatLayer);
   funcId += 1
   isInPause = false
-  counter = parseInt(timelapse.value);
 
   drawLayer(funcId)
 }
@@ -19,33 +26,65 @@ function pause() {
   isInPause = true
 }
 
+function createMap() {
+  operatorList.forEach((operator, index) => {
+    data[index].base.scooter_list.forEach(scooter => {
+      operatorMap[scooter.id] = scooter
+    })
+  })
+}
+
+function updateOperatorMap() {
+  operatorList.forEach((operator, index) => {
+    if (data[index].listDiffs[counter].added) {
+
+      data[index].listDiffs[counter].added.forEach(scooter => {
+        operatorMap[scooter.id] = scooter
+      })
+    }
+    if (data[index].listDiffs[counter].removed) {
+      data[index].listDiffs[counter].removed.forEach(scooter => {
+        delete operatorMap[scooter.id]
+      })
+    } 
+  })
+}
+
+function createArrayCord() {
+  if (counter === 0) {
+    createMap()
+  }
+  else {
+    updateOperatorMap()
+  }
+}
+
+function createFinalArray() {
+  return Object.entries(operatorMap).map(([clé, scooter]) => {
+    return [
+      scooter.lt,
+      scooter.lg,
+      1
+    ]
+  })
+}
+
 const timelapse = document.getElementById("timelapse");
 async function drawLayer(actuFuncID) {
-  const date = new Date(data[0][counter].date)
+  const date = new Date(data[0].listDiffs[counter].date)
   document.getElementById("infos").innerHTML = "Heure: " + date.getHours() + "h" + + date.getMinutes() 
-  var heatMapData = [];
-  let arrayCoord = [];
-  operatorList.forEach((operator, index) => {
-    let arrayUsed = [];
-    if (data[index][counter]) {
-      arrayUsed = data[index][counter].scooter_list;
-    }
-    const cords = arrayUsed.map(scooter => [
-      scooter.latitude,
-      scooter.longitude,
-      1
-    ]);
-    arrayCoord = arrayCoord.concat(cords);
-  });
+  createArrayCord();
+  let arrayCoord = createFinalArray() 
+  console.log(arrayCoord.length)
   let heatLayer = L.heatLayer(arrayCoord, { maxZoom: 18 });
   map.addLayer(heatLayer);
+  timelapse.value = counter;
   globalHeatLayer = heatLayer;
   await sleep(200);
   if (isInPause === true) {
     return 0;
   }
-  timelapse.value = counter;
-  if (counter + 1 >= data[0].length) {
+  if (counter + 1 >= data[0].listDiffs.length) {
     globalHeatLayer = heatLayer;
     return 0;
   }
@@ -55,7 +94,6 @@ async function drawLayer(actuFuncID) {
     map.removeLayer(heatLayer);
   }
   counter += 1;
-
   drawLayer(actuFuncID);
 }
 
@@ -70,7 +108,7 @@ async function loadData(operator, date) {
 
 async function refresh() {
   operatorList = []
-  document.getElementById("infos").innerHTML = ""
+  document.getElementById("infos").innerHTML = "Chargement des données"
   const lime = document.getElementById("lime");
   if (lime.checked) {
     operatorList.push("lime");
@@ -106,12 +144,13 @@ async function refresh() {
   funcId += 1;
   const date = new Date(document.getElementById("date").value)
   data = await Promise.all(operatorList.map(operator => loadData(operator, date)));
+  // document.getElementById("infos").innerHTML = ""
   if (data[0].length < 1) {
     document.getElementById("infos").innerHTML = "Aucune donnée disponible, essayez de change la date"
     return
   }
   // updating the timelapse
-  timelapse.max = data[0].length - 1;
+  timelapse.max = data[0].listDiffs.length - 1;
   timelapse.value = 0;
   counter = 0;
   map = globalMap
