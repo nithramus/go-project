@@ -108,6 +108,8 @@ async function loadData(operator, date) {
 async function refresh() {
   operatorMap = {}
   operatorList = []
+  isInPause = false
+  coordinateMap = []
   document.getElementById("infos").innerHTML = "Chargement des données"
   const lime = document.getElementById("lime");
   if (lime.checked) {
