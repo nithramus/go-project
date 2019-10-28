@@ -8,7 +8,6 @@ let isInPause = false
 let coordinateMap = []
 let operatorMap = {}
 function resume() {
-  console.log(counter, data[0].listDiffs.length)
   if (counter + 1 >= data[0].listDiffs.length) {
     counter = 0
   }
@@ -107,6 +106,7 @@ async function loadData(operator, date) {
 }
 
 async function refresh() {
+  operatorMap = {}
   operatorList = []
   document.getElementById("infos").innerHTML = "Chargement des données"
   const lime = document.getElementById("lime");
